@@ -1,0 +1,15 @@
+Commande ECHO activ‚e.
+# Ignore temporary files
+*.tmp
+*.log
+
+# Ignore Ansible retry files
+*.retry
+
+# Ignore sensitive files (if any)
+*.key
+*.pem
+
+# Ignore local editor files
+.vscode/
+*.swp

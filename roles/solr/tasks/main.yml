@@ -1,0 +1,24 @@
+---
+- name: Ensure Solr is running in cloud mode
+  become: yes
+  shell: "{{ solr_install_dir }}/bin/solr start -cloud -z '{{ zookeeper_connect }}' -p 8983"
+  args:
+    creates: "{{ solr_install_dir }}/server/logs/solr.log"
+
+- name: Create vertex_index collection
+  become: yes
+  shell: "{{ solr_install_dir }}/bin/solr create -c vertex_index -n data-driven-schema-configs"
+  register: vertex_create
+  failed_when: vertex_create.rc != 0 and "already exists" not in vertex_create.stderr
+
+- name: Create edge_index collection
+  become: yes
+  shell: "{{ solr_install_dir }}/bin/solr create -c edge_index -n data-driven-schema-configs"
+  register: edge_create
+  failed_when: edge_create.rc != 0 and "already exists" not in edge_create.stderr
+
+- name: Create fulltext_index collection
+  become: yes
+  shell: "{{ solr_install_dir }}/bin/solr create -c fulltext_index -n data-driven-schema-configs"
+  register: fulltext_create
+  failed_when: fulltext_create.rc != 0 and "already exists" not in fulltext_create.stderr

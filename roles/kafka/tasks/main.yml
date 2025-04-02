@@ -1,0 +1,30 @@
+---
+- name: Configure Kafka server.properties
+  become: yes
+  template:
+    src: server.properties.j2
+    dest: "{{ kafka_install_dir }}/config/server.properties"
+    mode: "0644"
+
+- name: Stop Kafka if running
+  become: yes
+  shell: "{{ kafka_install_dir }}/bin/kafka-server-stop.sh"
+  ignore_errors: yes
+
+- name: Start Kafka
+  become: yes
+  shell: "{{ kafka_install_dir }}/bin/kafka-server-start.sh -daemon {{ kafka_install_dir }}/config/server.properties"
+  args:
+    creates: "{{ kafka_install_dir }}/logs/kafkaServer.out"
+
+- name: Create ATLAS_HOOK topic
+  become: yes
+  shell: "{{ kafka_install_dir }}/bin/kafka-topics.sh --create --topic ATLAS_HOOK --bootstrap-server {{ kafka_bootstrap_servers }} --partitions 1 --replication-factor 1"
+  register: hook_topic
+  failed_when: hook_topic.rc != 0 and "Topic already exists" not in hook_topic.stderr
+
+- name: Create ATLAS_ENTITIES topic
+  become: yes
+  shell: "{{ kafka_install_dir }}/bin/kafka-topics.sh --create --topic ATLAS_ENTITIES --bootstrap-server {{ kafka_bootstrap_servers }} --partitions 1 --replication-factor 1"
+  register: entities_topic
+  failed_when: entities_topic.rc != 0 and "Topic already exists" not in entities_topic.stderr

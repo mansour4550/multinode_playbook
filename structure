@@ -1,0 +1,26 @@
+ansible-atlas-multinode/
+├── inventory.yml          # Inventory file (already provided)
+├── playbook.yml          # Main playbook (already provided)
+├── roles/
+│   ├── atlas/
+│   │   ├── tasks/
+│   │   │   └── main.yml
+│   │   ├── templates/
+│   │   │   ├── atlas-application.properties.j2
+│   │   │   └── atlas-env.sh.j2
+│   │   └── vars/
+│   │       └── main.yml  # Optional, if role-specific vars are needed
+│   ├── kafka/
+│   │   ├── tasks/
+│   │   │   └── main.yml
+│   │   └── templates/
+│   │       └── server.properties.j2
+│   ├── solr/
+│   │   ├── tasks/
+│   │   │   └── main.yml
+│   │   └── templates/
+│   └── hbase/
+│       └── tasks/
+│           └── main.yml
+└── group_vars/
+    └── all.yml           # Global variables (already provided)

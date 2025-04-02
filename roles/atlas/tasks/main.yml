@@ -1,0 +1,73 @@
+---
+- name: Install prerequisites
+  become: yes
+  apt:
+    name: maven
+    state: present
+
+- name: Download Atlas source
+  become: yes
+  get_url:
+    url: "https://dlcdn.apache.org/atlas/{{ atlas_version }}/apache-atlas-{{ atlas_version }}-sources.tar.gz"
+    dest: "/tmp/apache-atlas-{{ atlas_version }}-sources.tar.gz"
+    mode: "0644"
+
+- name: Extract Atlas source
+  become: yes
+  unarchive:
+    src: "/tmp/apache-atlas-{{ atlas_version }}-sources.tar.gz"
+    dest: "/tmp"
+    remote_src: yes
+
+- name: Build Atlas
+  become: yes
+  become_user: hadoopZetta
+  shell: |
+    export MAVEN_OPTS="-Xms2g -Xmx2g"
+    mvn clean -DskipTests package -Pdist
+  args:
+    chdir: "/tmp/apache-atlas-sources-{{ atlas_version }}"
+    creates: "/tmp/apache-atlas-sources-{{ atlas_version }}/distro/target/apache-atlas-{{ atlas_version }}-bin.tar.gz"
+
+- name: Create Atlas install directory
+  become: yes
+  file:
+    path: "{{ atlas_install_dir }}"
+    state: directory
+    owner: hadoopZetta
+    group: hadoopZetta
+
+- name: Extract Atlas binary
+  become: yes
+  unarchive:
+    src: "/tmp/apache-atlas-sources-{{ atlas_version }}/distro/target/apache-atlas-{{ atlas_version }}-bin.tar.gz"
+    dest: "{{ atlas_install_dir }}"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+    owner: hadoopZetta
+    group: hadoopZetta
+
+- name: Configure atlas-application.properties
+  become: yes
+  template:
+    src: atlas-application.properties.j2
+    dest: "{{ atlas_install_dir }}/conf/atlas-application.properties"
+    owner: hadoopZetta
+    group: hadoopZetta
+    mode: "0644"
+
+- name: Configure atlas-env.sh
+  become: yes
+  template:
+    src: atlas-env.sh.j2
+    dest: "{{ atlas_install_dir }}/conf/atlas-env.sh"
+    owner: hadoopZetta
+    group: hadoopZetta
+    mode: "0644"
+
+- name: Start Atlas
+  become: yes
+  become_user: hadoopZetta
+  shell: "{{ atlas_install_dir }}/bin/atlas_start.py"
+  args:
+    chdir: "{{ atlas_install_dir }}/bin"

@@ -1,0 +1,13 @@
+---
+- name: Ensure HBase is running
+  become: yes
+  shell: "{{ hbase_install_dir }}/bin/start-hbase.sh"
+  args:
+    creates: "{{ hbase_install_dir }}/logs/hbase-*.log"
+
+- name: Grant permissions to atlas user
+  become: yes
+  shell: |
+    echo "grant 'atlas', 'RWXCA', 'atlas'" | {{ hbase_install_dir }}/bin/hbase shell
+  register: hbase_grant
+  changed_when: hbase_grant.rc == 0

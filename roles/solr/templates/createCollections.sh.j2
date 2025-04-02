@@ -1,0 +1,22 @@
+#!/bin/bash
+
+SOLR_BIN="{{ solr_install_dir }}/bin/solr"
+ZOOKEEPER_CONNECT="{{ zookeeper_connect }}"
+SOLR_PORT=8983
+
+# Function to check if a collection exists
+check_collection() {
+  local collection=$1
+  $SOLR_BIN status | grep -q "$collection"
+  return $?
+}
+
+# Create collections if they don't exist
+for collection in "vertex_index" "edge_index" "fulltext_index"; do
+  if ! check_collection "$collection"; then
+    echo "Creating collection: $collection"
+    $SOLR_BIN create -c "$collection" -n data-driven-schema-configs -z "$ZOOKEEPER_CONNECT" -p $SOLR_PORT
+  else
+    echo "Collection $collection already exists, skipping..."
+  fi
+done

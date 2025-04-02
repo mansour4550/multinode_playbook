@@ -1,0 +1,20 @@
+---
+- name: Configure HBase permissions
+  hosts: hbase_nodes
+  roles:
+    - hbase
+
+- name: Configure Kafka
+  hosts: kafka_nodes
+  roles:
+    - kafka
+
+- name: Configure Solr
+  hosts: solr_nodes
+  roles:
+    - solr
+
+- name: Install and configure Apache Atlas
+  hosts: atlas_nodes
+  roles:
+    - atlas

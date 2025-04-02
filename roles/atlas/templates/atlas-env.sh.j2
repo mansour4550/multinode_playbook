@@ -1,0 +1,5 @@
+export HBASE_CONF_DIR={{ atlas_install_dir }}/conf/hbase
+export MANAGE_LOCAL_HBASE=false
+export MANAGE_LOCAL_SOLR=false
+export MANAGE_EMBEDDED_CASSANDRA=false
+export ATLAS_OPTS="$ATLAS_OPTS -Djanusgraph.index.search.solr.mode=http -Djanusgraph.index.search.solr.http-urls=http://192.168.22.10:8983/solr"
