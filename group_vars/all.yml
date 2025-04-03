@@ -1,9 +1,8 @@
----
 atlas_version: "2.4.0"
 atlas_install_dir: "/opt/apache-atlas-{{ atlas_version }}"
-solr_install_dir: "/opt/solr-8.11.2"  # Pre-installed path
-kafka_install_dir: "/opt/kafka"       # Pre-installed path
-hbase_install_dir: "/opt/hbase-2.5.5-hadoop3"  # Pre-installed path
+solr_install_dir: "/opt/solr-8.11.2"
+kafka_install_dir: "/opt/kafka"
+hbase_install_dir: "/opt/hbase-2.5.5-hadoop3"
 zookeeper_connect: "192.168.22.10:2181,192.168.22.11:2181,192.168.22.16:2181"
-kafka_bootstrap_servers: "192.168.22.14:9092"
-atlas_ha_enabled: true  # Set to false if HA is not desired
+kafka_bootstrap_servers: "192.168.22.14:9092,192.168.22.13:9092"
+atlas_ha_enabled: true

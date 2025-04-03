@@ -1,20 +1,86 @@
 ---
+# Playbook to configure a multi-node big data cluster with HBase, Kafka, Solr, and Atlas
+
+- name: Configure ZooKeeper
+  hosts: zookeeper_nodes
+  any_errors_fatal: true
+  roles:
+    - zookeeper  # Assumes a zookeeper role exists; if not, we'll need to add it
+  post_tasks:
+    - name: Verify ZooKeeper is running
+      ansible.builtin.shell: "{{ kafka_install_dir }}/bin/zookeeper-shell.sh {{ ansible_host }}:2181 stat"
+      register: zk_check
+      failed_when: "'Mode: ' not in zk_check.stdout"
+      loop: "{{ groups['zookeeper_nodes'] }}"
+      delegate_to: "{{ item }}"
+      run_once: true
+
 - name: Configure HBase permissions
   hosts: hbase_nodes
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Ensure ZooKeeper is accessible
+      ansible.builtin.shell: "{{ kafka_install_dir }}/bin/zookeeper-shell.sh {{ groups['zookeeper_nodes'][0] }}:2181 stat"
+      register: zk_check
+      failed_when: "'Mode: ' not in zk_check.stdout"
   roles:
     - hbase
+  post_tasks:
+    - name: Verify HBase is running
+      ansible.builtin.shell: "{{ hbase_install_dir }}/bin/hbase shell -n"
+      register: hbase_check
+      failed_when: hbase_check.rc != 0
 
 - name: Configure Kafka
   hosts: kafka_nodes
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Ensure ZooKeeper is accessible
+      ansible.builtin.shell: "{{ kafka_install_dir }}/bin/zookeeper-shell.sh {{ groups['zookeeper_nodes'][0] }}:2181 stat"
+      register: zk_check
+      failed_when: "'Mode: ' not in zk_check.stdout"
   roles:
     - kafka
+  post_tasks:
+    - name: Verify Kafka brokers are registered
+      ansible.builtin.shell: "{{ kafka_install_dir }}/bin/zookeeper-shell.sh {{ groups['zookeeper_nodes'][0] }}:2181 ls /brokers/ids"
+      register: kafka_brokers
+      failed_when: kafka_brokers.rc != 0 or "'[1, 2]' not in kafka_brokers.stdout"
+      run_once: true
 
 - name: Configure Solr
   hosts: solr_nodes
+  any_errors_fatal: true
   roles:
     - solr
+  post_tasks:
+    - name: Verify Solr is running
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:8983/solr/admin/cores"
+        status_code: 200
+      register: solr_check
+      failed_when: solr_check.status != 200
 
 - name: Install and configure Apache Atlas
   hosts: atlas_nodes
+  any_errors_fatal: true
+  pre_tasks:
+    - name: Ensure Kafka is accessible
+      ansible.builtin.shell: "{{ kafka_install_dir }}/bin/kafka-topics.sh --list --bootstrap-server {{ kafka_bootstrap_servers }}"
+      register: kafka_check
+      failed_when: kafka_check.rc != 0
+    - name: Ensure Solr is accessible
+      ansible.builtin.uri:
+        url: "http://{{ groups['solr_nodes'][0] }}:8983/solr/admin/cores"
+        status_code: 200
+      register: solr_check
+      failed_when: solr_check.status != 200
   roles:
     - atlas
+  post_tasks:
+    - name: Verify Atlas is running
+      ansible.builtin.uri:
+        url: "http://{{ ansible_host }}:21000/api/atlas/admin/status"
+        status_code: 200
+      register: atlas_check
+      failed_when: atlas_check.status != 200

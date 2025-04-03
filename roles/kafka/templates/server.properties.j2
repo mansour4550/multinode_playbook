@@ -1,3 +1,5 @@
+broker.id={{ broker_id }}
 zookeeper.connect={{ zookeeper_connect }}
-listeners=PLAINTEXT://192.168.22.14:9092
-advertised.listeners=PLAINTEXT://192.168.22.14:9092
+listeners=PLAINTEXT://{{ ansible_host }}:9092
+advertised.listeners=PLAINTEXT://{{ ansible_host }}:9092
+log.dirs={{ kafka_install_dir }}/logs
